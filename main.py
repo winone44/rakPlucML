@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 import sqlite3
+import bcrypt
 
 
 def setup_database():
@@ -43,64 +44,67 @@ def setup_database():
 setup_database()
 
 
-def register():
-    username = username_entry.get()
-    password = password_entry.get()
+def log_reg_from():
+    def register():
+        username = username_entry.get()
+        password = password_entry.get()
 
-    conn = sqlite3.connect('data.db')
-    cursor = conn.cursor()
+        password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-    try:
-        cursor.execute("INSERT INTO accounts (username, password) VALUES (?, ?)", (username, password))
-        conn.commit()
-        messagebox.showinfo("Rejestracja", "Rejestracja zakończona sukcesem!")
-    except sqlite3.IntegrityError:
-        messagebox.showerror("Błąd", "Użytkownik o takiej nazwie już istnieje!")
+        conn = sqlite3.connect('data.db')
+        cursor = conn.cursor()
 
-    conn.close()
+        try:
+            cursor.execute("INSERT INTO accounts (username, password) VALUES (?, ?)", (username, password))
+            conn.commit()
+            messagebox.showinfo("Rejestracja", "Rejestracja zakończona sukcesem!")
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Błąd", "Użytkownik o takiej nazwie już istnieje!")
 
+        conn.close()
 
-def login():
-    username = username_entry.get()
-    password = password_entry.get()
+    def login():
+        username = username_entry.get()
+        password = password_entry.get()
 
-    conn = sqlite3.connect('data.db')
-    cursor = conn.cursor()
+        conn = sqlite3.connect('data.db')
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT password FROM accounts WHERE username=?", (username,))
-    stored_password = cursor.fetchone()
+        cursor.execute("SELECT password FROM accounts WHERE username=?", (username,))
+        stored_password = cursor.fetchone()
+        conn.close()
 
-    conn.close()
+        if bcrypt.checkpw(password.encode('utf-8'), stored_password[0]):
+            # Zalogowano pomyślnie
+            messagebox.showinfo("Logowanie", "Zalogowano pomyślnie!")
+            # Możesz teraz przejść do innej części aplikacji, np. wyświetlić formularz
+            app_form()
+            login_frame.destroy()
+        else:
+            messagebox.showerror("Błąd", "Nieprawidłowa nazwa użytkownika lub hasło!")
 
-    if stored_password and stored_password[0] == password:
-        # Zalogowano pomyślnie
-        messagebox.showinfo("Logowanie", "Zalogowano pomyślnie!")
-        # Możesz teraz przejść do innej części aplikacji, np. wyświetlić formularz
-        app_form()
-        login_frame.destroy()
-    else:
-        messagebox.showerror("Błąd", "Nieprawidłowa nazwa użytkownika lub hasło!")
+    app.title("Logowanie")
+
+    login_frame = ttk.Frame(app)
+    login_frame.pack(padx=10, pady=10)
+
+    ttk.Label(login_frame, text="Nazwa użytkownika:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
+    username_entry = ttk.Entry(login_frame)
+    username_entry.grid(row=0, column=1, padx=5, pady=5)
+
+    ttk.Label(login_frame, text="Hasło:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
+    password_entry = ttk.Entry(login_frame, show="*")
+    password_entry.grid(row=1, column=1, padx=5, pady=5)
+
+    login_button = ttk.Button(login_frame, text="Zaloguj", command=login)
+    login_button.grid(row=2, column=0, padx=5, pady=20)
+
+    register_button = ttk.Button(login_frame, text="Zarejestruj", command=register)
+    register_button.grid(row=2, column=1, padx=5, pady=20)
 
 
 app = tk.Tk()
-app.title("Logowanie")
-
-login_frame = ttk.Frame(app)
-login_frame.pack(padx=10, pady=10)
-
-ttk.Label(login_frame, text="Nazwa użytkownika:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
-username_entry = ttk.Entry(login_frame)
-username_entry.grid(row=0, column=1, padx=5, pady=5)
-
-ttk.Label(login_frame, text="Hasło:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
-password_entry = ttk.Entry(login_frame, show="*")
-password_entry.grid(row=1, column=1, padx=5, pady=5)
-
-login_button = ttk.Button(login_frame, text="Zaloguj", command=login)
-login_button.grid(row=2, column=0, padx=5, pady=20)
-
-register_button = ttk.Button(login_frame, text="Zarejestruj", command=register)
-register_button.grid(row=2, column=1, padx=5, pady=20)
+log_reg_from()
 
 
 def app_form():
@@ -138,7 +142,6 @@ def app_form():
     app.title("Formularz")
     frame = ttk.Frame(app)
     frame.pack(padx=10, pady=10)
-    form_data = ['T']
 
     # Imię
     ttk.Label(frame, text="Imię:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
