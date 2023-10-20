@@ -41,10 +41,15 @@ def setup_database():
     conn.close()
 
 
-setup_database()
-
-
 def log_reg_from():
+    def update_buttons_status(*args):
+        if username_var.get() and password_var.get():
+            login_button['state'] = tk.NORMAL
+            register_button['state'] = tk.NORMAL
+        else:
+            login_button['state'] = tk.DISABLED
+            register_button['state'] = tk.DISABLED
+
     def register():
         username = username_entry.get()
         password = password_entry.get()
@@ -74,7 +79,7 @@ def log_reg_from():
         stored_password = cursor.fetchone()
         conn.close()
 
-        if bcrypt.checkpw(password.encode('utf-8'), stored_password[0]):
+        if stored_password and bcrypt.checkpw(password.encode('utf-8'), stored_password[0]):
             # Zalogowano pomyślnie
             messagebox.showinfo("Logowanie", "Zalogowano pomyślnie!")
             # Możesz teraz przejść do innej części aplikacji, np. wyświetlić formularz
@@ -88,23 +93,27 @@ def log_reg_from():
     login_frame = ttk.Frame(app)
     login_frame.pack(padx=10, pady=10)
 
+    username_var = tk.StringVar()
+    password_var = tk.StringVar()
+
+    username_var.trace_add("write", update_buttons_status)
+    password_var.trace_add("write", update_buttons_status)
+
     ttk.Label(login_frame, text="Nazwa użytkownika:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
-    username_entry = ttk.Entry(login_frame)
+    username_entry = ttk.Entry(login_frame, textvariable=username_var)
     username_entry.grid(row=0, column=1, padx=5, pady=5)
 
     ttk.Label(login_frame, text="Hasło:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
-    password_entry = ttk.Entry(login_frame, show="*")
+    password_entry = ttk.Entry(login_frame, textvariable=password_var, show="*")
     password_entry.grid(row=1, column=1, padx=5, pady=5)
 
-    login_button = ttk.Button(login_frame, text="Zaloguj", command=login)
+    login_button = ttk.Button(login_frame, text="Zaloguj", command=login, state=tk.DISABLED)
+    # login_button = ttk.Button(login_frame, text="Zaloguj", command=login)
     login_button.grid(row=2, column=0, padx=5, pady=20)
 
-    register_button = ttk.Button(login_frame, text="Zarejestruj", command=register)
+    register_button = ttk.Button(login_frame, text="Zarejestruj", command=register, state=tk.DISABLED)
+    # register_button = ttk.Button(login_frame, text="Zarejestruj", command=register)
     register_button.grid(row=2, column=1, padx=5, pady=20)
-
-
-app = tk.Tk()
-log_reg_from()
 
 
 def app_form():
@@ -239,5 +248,9 @@ def app_form():
     submit_button = ttk.Button(frame, text="Zatwierdź", command=submit_form)
     submit_button.grid(row=17, column=0, columnspan=2, pady=20)
 
+
+setup_database()
+app = tk.Tk()
+log_reg_from()
 
 app.mainloop()
