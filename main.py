@@ -88,7 +88,6 @@ def log_reg_from():
 
         if stored_password and bcrypt.checkpw(password.encode('utf-8'), stored_password[0]):
             # Zalogowano pomyślnie
-            messagebox.showinfo("Logowanie", "Zalogowano pomyślnie!")
             # Możesz teraz przejść do innej części aplikacji, np. wyświetlić formularz
             app_form()
             login_frame.destroy()
