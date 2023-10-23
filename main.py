@@ -9,6 +9,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
+form_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
 
 def setup_database():
     conn = sqlite3.connect('data.db')
@@ -123,6 +125,22 @@ def log_reg_from():
 
 
 def app_form():
+    questions = [
+        ("Czy palisz?", "smoke_var"),
+        ("Czy masz żółte palce?", "yellow_fingers_var"),
+        ("Czy osoba cierpi na lęk?", "anxiety_var"),
+        ("Czy odczuwasz presje otoczenia?", "pressure_var"),
+        ("Czy zmagasz się z chorobą przewlekłą?", "chronic_disease_var"),
+        ("Czy jesteś często zmęczony?", "fatigue_var"),
+        ("Czy masz alergie?", "allergy_var"),
+        ("Czy chorujesz na bielactwo?", "vitiligo_var"),
+        ("Czy spożywasz alkohol?", "alcohol_var"),
+        ("Czy męczy cię kaszel??", "cough_var"),
+        ("Czy miewasz duszności?", "dyspnea_var"),
+        ("Czy masz trudności w połykaniu?", "swallowing_var"),
+        ("Czy odczuwasz ból w klatce piersiowej?", "chest_pain_var"),
+    ]
+
     def submit_form():
         conn = sqlite3.connect('data.db')
         cursor = conn.cursor()
@@ -135,19 +153,19 @@ def app_form():
             surname_entry.get(),
             gender_combobox.current(),
             age_spinbox.get(),
-            smoke_var.get(),
-            yellow_fingers_var.get(),
-            anxiety_var.get(),
-            pressure_var.get(),
-            chronic_disease_var.get(),
-            fatigue_var.get(),
-            allergy_var.get(),
-            vitiligo_var.get(),
-            alcohol_var.get(),
-            cough_var.get(),
-            dyspnea_var.get(),
-            swallowing_var.get(),
-            chest_pain_var.get(),
+            form_data[4].get(),
+            form_data[5].get(),
+            form_data[6].get(),
+            form_data[7].get(),
+            form_data[8].get(),
+            form_data[9].get(),
+            form_data[10].get(),
+            form_data[11].get(),
+            form_data[12].get(),
+            form_data[13].get(),
+            form_data[14].get(),
+            form_data[15].get(),
+            form_data[16].get(),
         ))
 
         conn.commit()
@@ -218,15 +236,22 @@ def app_form():
             return probability[0]
 
         # Ponowne przetestowanie funkcji
-        sample_probability = predict_lung_cancer_risk(gender_combobox.current(), age_spinbox.get(), smoke_var.get(),
-                                                      yellow_fingers_var.get(), anxiety_var.get(), pressure_var.get(),
-                                                      chronic_disease_var.get(), fatigue_var.get(), allergy_var.get(),
-                                                      vitiligo_var.get(), alcohol_var.get(), cough_var.get(),
-                                                      dyspnea_var.get(), swallowing_var.get(), chest_pain_var.get())
+        sample_probability = predict_lung_cancer_risk(gender_combobox.current(), age_spinbox.get(), form_data[4].get(),
+                                                      form_data[5].get(), form_data[6].get(), form_data[7].get(),
+                                                      form_data[8].get(), form_data[9].get(), form_data[10].get(),
+                                                      form_data[11].get(), form_data[12].get(), form_data[13].get(),
+                                                      form_data[14].get(), form_data[15].get(), form_data[16].get())
         print(sample_probability)
 
         messagebox.showinfo("Informacje",
                             f"Prawdopodobieństwo zachorowania na raka płuc {round(sample_probability * 100, 2)}%")
+
+    def create_question(frame, label_text, variable_name, row_num):
+        var = tk.IntVar(value=0)
+        ttk.Label(frame, text=label_text).grid(row=row_num, column=0, sticky=tk.W, padx=5, pady=5)
+        ttk.Radiobutton(frame, text="Tak", variable=var, value=1).grid(row=row_num, column=1, sticky=tk.W)
+        ttk.Radiobutton(frame, text="Nie", variable=var, value=0).grid(row=row_num, column=1, sticky=tk.E)
+        form_data[row_num] = var
 
     app.title("Formularz")
     frame = ttk.Frame(app)
@@ -252,83 +277,8 @@ def app_form():
     age_spinbox = ttk.Spinbox(frame, from_=0, to=100)
     age_spinbox.grid(row=3, column=1, padx=5, pady=5)
 
-    # Czy palisz?
-    smoke_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy palisz?").grid(row=4, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=smoke_var, value=1).grid(row=4, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=smoke_var, value=0).grid(row=4, column=1, sticky=tk.E)
-
-    # Czy masz żółte palce?
-    yellow_fingers_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy masz żółte palce?").grid(row=5, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=yellow_fingers_var, value=1).grid(row=5, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=yellow_fingers_var, value=0).grid(row=5, column=1, sticky=tk.E)
-
-    # Czy osoba cierpi na lęk?
-    anxiety_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy osoba cierpi na lęk ?").grid(row=6, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=anxiety_var, value=1).grid(row=6, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=anxiety_var, value=0).grid(row=6, column=1, sticky=tk.E)
-
-    # Czy odczuwasz presje otoczenia?
-    pressure_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy odczuwasz presje otoczenia?").grid(row=7, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=pressure_var, value=1).grid(row=7, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=pressure_var, value=0).grid(row=7, column=1, sticky=tk.E)
-
-    # Czy zmagasz się z chorobą przewlekłą?
-    chronic_disease_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy zmagasz się z chorobą przewlekłą?").grid(row=8, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=chronic_disease_var, value=1).grid(row=8, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=chronic_disease_var, value=0).grid(row=8, column=1, sticky=tk.E)
-
-    # Czy jesteś często zmęczony?
-    fatigue_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy jesteś często zmęczony?").grid(row=9, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=fatigue_var, value=1).grid(row=9, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=fatigue_var, value=0).grid(row=9, column=1, sticky=tk.E)
-
-    # Czy masz alergie?
-    allergy_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy masz alergie?").grid(row=10, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=allergy_var, value=1).grid(row=10, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=allergy_var, value=0).grid(row=10, column=1, sticky=tk.E)
-
-    # Czy chorujesz na bielactwo?
-    vitiligo_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy chorujesz na bielactwo?").grid(row=11, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=vitiligo_var, value=1).grid(row=11, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=vitiligo_var, value=0).grid(row=11, column=1, sticky=tk.E)
-
-    # Czy spożywasz alkohol?
-    alcohol_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy spożywasz alkohol?").grid(row=12, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=alcohol_var, value=1).grid(row=12, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=alcohol_var, value=0).grid(row=12, column=1, sticky=tk.E)
-
-    # Czy męczy cię kaszel?
-    cough_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy męczy cię kaszel?").grid(row=13, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=cough_var, value=1).grid(row=13, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=cough_var, value=0).grid(row=13, column=1, sticky=tk.E)
-
-    # Czy miewasz duszności?
-    dyspnea_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy miewasz duszności?").grid(row=14, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=dyspnea_var, value=1).grid(row=14, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=dyspnea_var, value=0).grid(row=14, column=1, sticky=tk.E)
-
-    # Czy masz trudności w połykaniu?
-    swallowing_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy masz trudności w połykaniu?").grid(row=15, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=swallowing_var, value=1).grid(row=15, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=swallowing_var, value=0).grid(row=15, column=1, sticky=tk.E)
-
-    # Czy odczuwasz ból w klatce piersiowej?
-    chest_pain_var = tk.IntVar(value=0)
-    ttk.Label(frame, text="Czy odczuwasz ból w klatce piersiowej?").grid(row=16, column=0, sticky=tk.W, padx=5, pady=5)
-    ttk.Radiobutton(frame, text="Tak", variable=chest_pain_var, value=1).grid(row=16, column=1, sticky=tk.W)
-    ttk.Radiobutton(frame, text="Nie", variable=chest_pain_var, value=0).grid(row=16, column=1, sticky=tk.E)
+    for idx, (question, var_name) in enumerate(questions):
+        create_question(frame, question, var_name, idx + 4)
 
     # przycisk submit na końcu
     submit_button = ttk.Button(frame, text="Zapisz", command=submit_form)
