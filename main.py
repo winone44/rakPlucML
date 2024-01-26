@@ -1,7 +1,9 @@
 import tkinter as tk
+import uuid
 from tkinter import messagebox, ttk
 import sqlite3
 import bcrypt
+from datetime import datetime
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -13,14 +15,20 @@ form_data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
 def setup_database():
+    """
+    Konfiguruje bazę danych, tworząc tabele, jeśli nie istnieją.
+
+    :return: None
+    """
     conn = sqlite3.connect('data.db')
     cursor = conn.cursor()
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY,
+        id_classification_result TEXT PRIMARY KEY,
         name TEXT,
         surname TEXT,
+        date DATETIME,
         gender TEXT,
         age INTEGER,
         smoke INTEGER,
@@ -35,13 +43,15 @@ def setup_database():
         cough INTEGER,
         dyspnea INTEGER,
         swallowing INTEGER,
-        chest_pain INTEGER
+        chest_pain INTEGER,
+        proba INTEGER
     )
     ''')
 
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS accounts (
-        username TEXT PRIMARY KEY,
+        id_client TEXT PRIMARY KEY,
+        username TEXT,
         password TEXT
     )
     ''')
@@ -51,6 +61,11 @@ def setup_database():
 
 
 def log_reg_from():
+    """
+    Rozpoczyna proces logowania i rejestracji.
+
+    :return: None
+    """
     def update_buttons_status(*args):
         if username_var.get() and password_var.get():
             login_button['state'] = tk.NORMAL
@@ -68,8 +83,11 @@ def log_reg_from():
         conn = sqlite3.connect('data.db')
         cursor = conn.cursor()
 
+        id_client = str(uuid.uuid4())
+
         try:
-            cursor.execute("INSERT INTO accounts (username, password) VALUES (?, ?)", (username, password))
+            cursor.execute("INSERT INTO accounts (id_client, username, password) VALUES (?, ?, ?)",
+                           (id_client, username, password))
             conn.commit()
             messagebox.showinfo("Rejestracja", "Rejestracja zakończona sukcesem!")
         except sqlite3.IntegrityError:
@@ -125,6 +143,11 @@ def log_reg_from():
 
 
 def app_form():
+    """
+    Ta metoda tworzy formularz z serią pytań i pozwala użytkownikowi na przesłanie formularza.
+
+    :return: None
+    """
     questions = [
         ("Czy palisz?", "smoke_var"),
         ("Czy masz żółte palce?", "yellow_fingers_var"),
@@ -142,15 +165,23 @@ def app_form():
     ]
 
     def submit_form():
+        """
+        Przesyła dane formularza do bazy danych.
+
+        :return: None
+        """
         conn = sqlite3.connect('data.db')
         cursor = conn.cursor()
 
         cursor.execute('''
-        INSERT INTO users (name, surname, gender, age, smoke, yellow_fingers, anxiety, pressure, chronic_disease, fatigue, allergy, vitiligo, alcohol, cough, dyspnea, swallowing, chest_pain)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (id_classification_result, name, surname, date, gender, age, smoke, yellow_fingers, anxiety,
+        pressure, chronic_disease, fatigue, allergy, vitiligo, alcohol, cough, dyspnea, swallowing, chest_pain, proba)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
+            str(uuid.uuid4()),
             name_entry.get(),
             surname_entry.get(),
+            datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
             gender_combobox.current(),
             age_spinbox.get(),
             form_data[4].get(),
@@ -166,6 +197,7 @@ def app_form():
             form_data[14].get(),
             form_data[15].get(),
             form_data[16].get(),
+            check_probability()
         ))
 
         conn.commit()
@@ -174,6 +206,11 @@ def app_form():
         messagebox.showinfo("Informacje", "Dane zapisane w bazie danych!")
 
     def check_probability():
+        """
+        Metoda ta służy do sprawdzania prawdopodobieństwa wystąpienia raka płuc na podstawie podanych danych wejściowych.
+
+        :return: None
+        """
         # Wczytanie danych z pliku CSV
         data = pd.read_csv('./newData.csv')
 
@@ -212,13 +249,13 @@ def app_form():
                                      fatigue, allergy, wheezing, alcohol_consuming, coughing, shortness_of_breath,
                                      swallowing_difficulty, chest_pain):
             """
-            Updated function to predict the probability of having lung cancer based on the provided inputs.
+            Funkcja przewidująca prawdopodobieństwo zachorowania na raka płuc na podstawie podanych danych wejściowych.
 
-            Args:
-            - All the parameters correspond to the survey questions.
+            Argumenty:
+            - Wszystkie parametry odpowiadają pytaniom ankiety.
 
-            Returns:
-            - Probability of having lung cancer.
+            Zwraca:
+            - Prawdopodobieństwo zachorowania na raka płuc.
             """
             # Tworzenie DataFrame na podstawie dostarczonych odpowiedzi z odpowiednimi nazwami kolumn
             features_df = pd.DataFrame(
@@ -246,7 +283,23 @@ def app_form():
         messagebox.showinfo("Informacje",
                             f"Prawdopodobieństwo zachorowania na raka płuc {round(sample_probability * 100, 2)}%")
 
+        return sample_probability
+
     def create_question(frame, label_text, variable_name, row_num):
+        """
+        Tworzy pytanie w określonej ramce z podanym tekstem etykiety, nazwą zmiennej i numerem wiersza.
+
+        :param frame: Ramka do utworzenia pytania.
+        :type frame: tkinter.Frame
+        :param label_text: Tekst etykiety dla pytania.
+        :type label_text: str
+        :param variable_name: Nazwa zmiennej powiązanej z pytaniem.
+        :type variable_name: str
+        :param row_num: Numer wiersza pytania w ramce.
+        :type row_num: int
+        :return: None
+        :rtype: None
+        """
         var = tk.IntVar(value=0)
         ttk.Label(frame, text=label_text).grid(row=row_num, column=0, sticky=tk.W, padx=5, pady=5)
         ttk.Radiobutton(frame, text="Tak", variable=var, value=1).grid(row=row_num, column=1, sticky=tk.W)
@@ -277,6 +330,7 @@ def app_form():
     age_spinbox = ttk.Spinbox(frame, from_=0, to=100)
     age_spinbox.grid(row=3, column=1, padx=5, pady=5)
 
+    # Pytania
     for idx, (question, var_name) in enumerate(questions):
         create_question(frame, question, var_name, idx + 4)
 
