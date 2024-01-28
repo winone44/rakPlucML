@@ -212,19 +212,28 @@ def app_form():
         :return: None
         """
         # Wczytanie danych z pliku CSV
+        #
+        # Dane są wczytywane z pliku newData.csv przy użyciu pandas.
         data = pd.read_csv('./newData.csv')
 
         # Wyświetlenie pierwszych kilku wierszy danych
         print(data.head())
 
         # Podział danych na zmienne niezależne (X) i zmienną docelową (y)
+        #
+        # Dane są dzielone na zmienne niezależne (X) oraz zmienną docelową (y), gdzie LUNG_CANCER jest zmienną docelową.
         X = data.drop('LUNG_CANCER', axis=1)
         y = data['LUNG_CANCER']
 
         # Podział danych na zbiory treningowe i testowe
+        #
+        # Dane są dzielone na zbiory treningowe i testowe przy użyciu train_test_split z biblioteki sklearn,
+        # z 20% danych jako zbiór testowy.
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
         # Skalowanie cech
+        #
+        # Zmienne niezależne są skalowane przy użyciu StandardScaler w celu normalizacji rozkładu cech.
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
@@ -232,13 +241,20 @@ def app_form():
         print(X_train_scaled[:5], y_train.head())  # Wyświetlenie przykładowych przeskalowanych danych treningowych
 
         # Trenowanie modelu regresji logistycznej
+        #
+        # Model regresji logistycznej jest trenowany na przeskalowanych danych treningowych.
         logreg = LogisticRegression(random_state=42)
         logreg.fit(X_train_scaled, y_train)
 
         # Predykcja na zbiorze testowym
+        #
+        # Model jest używany do wykonania predykcji na zbiorze testowym.
         y_pred = logreg.predict(X_test_scaled)
 
         # Ewaluacja modelu
+        #
+        # Model jest ewaluowany przy użyciu accuracy_score, classification_report i confusion_matrix w celu oceny
+        # dokładności, raportu klasyfikacji oraz macierzy pomyłek.
         accuracy = accuracy_score(y_test, y_pred)
         classification_rep = classification_report(y_test, y_pred)
         confusion = confusion_matrix(y_test, y_pred)
@@ -289,16 +305,7 @@ def app_form():
         """
         Tworzy pytanie w określonej ramce z podanym tekstem etykiety, nazwą zmiennej i numerem wiersza.
 
-        :param frame: Ramka do utworzenia pytania.
-        :type frame: tkinter.Frame
-        :param label_text: Tekst etykiety dla pytania.
-        :type label_text: str
-        :param variable_name: Nazwa zmiennej powiązanej z pytaniem.
-        :type variable_name: str
-        :param row_num: Numer wiersza pytania w ramce.
-        :type row_num: int
         :return: None
-        :rtype: None
         """
         var = tk.IntVar(value=0)
         ttk.Label(frame, text=label_text).grid(row=row_num, column=0, sticky=tk.W, padx=5, pady=5)
